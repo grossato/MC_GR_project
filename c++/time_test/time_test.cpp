@@ -5,7 +5,7 @@
 #include <map>
 #include <chrono>
 
-// ! time function (return in fraction of second)
+// ! Random generator function
 std::vector<int> rand_generator(int size){
   // ! Final vector of random unrepeated values
   std::vector<int> a;
@@ -30,12 +30,16 @@ std::vector<int> rand_generator(int size){
   }
   return a;
 }
+
+// Function to fill the tree
 void fill_tree(Tree<int,int>& t, std::vector<int>& v){
       for (size_t i = 0; i < v.size(); i++) {
         // ! add the number to the tree (the value is set to 10)
         t.insert(v.at(i),10);
       }
 }
+
+// Function to fill the map
 void fill_map(std::map<int, int>& map ,std::vector<int>& v){
       for (size_t i = 0; i < v.size(); i++) {
         // ! add the number to the map (the value is set to 10)
@@ -43,6 +47,7 @@ void fill_map(std::map<int, int>& map ,std::vector<int>& v){
       }
 }
 
+// Functon to calculate the standard deviation
 double dev_func(std::vector<double> v, double ave)
 {
     double E=0;
@@ -53,6 +58,8 @@ double dev_func(std::vector<double> v, double ave)
     }
     return sqrt(inverse * E);
 }
+
+// Function to calculate average
 double average_func(std::vector<double> v)
 {
     double sum = 0;
@@ -86,6 +93,7 @@ int main(int argc, char * argv []){
     }
 
   std::vector<int> random_vect = rand_generator(size);
+  
   // ! Define containers
   Tree<int,int> tree;
   std::map<int, int> map;

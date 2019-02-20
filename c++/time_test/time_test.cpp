@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <map>
 #include <chrono>
+#include <random>
 
 // ! Random generator function
 std::vector<int> rand_generator(int size){
@@ -93,7 +94,7 @@ int main(int argc, char * argv []){
     }
 
   std::vector<int> random_vect = rand_generator(size);
-  
+
   // ! Define containers
   Tree<int,int> tree;
   std::map<int, int> map;

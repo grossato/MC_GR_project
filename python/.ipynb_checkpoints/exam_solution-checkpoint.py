@@ -20,7 +20,6 @@ class PostcardList():
         self._from = {}
 		# A dictionary string, index for all postcard receivers.
         self._to = {}
-                #read line per line form a file named "file_name" passed by the user and store the lines in _postcards,at the end the function parse the list _postcards
     def readFile(self,file_name):
         self._file=file_name
         with open(file_name,'r') as f:
@@ -28,14 +27,13 @@ class PostcardList():
                 self._postcards.append(i) 
         f.close()
         self.parsePostcards()
-        # write the values of the list _postcards in a new file filename
     def writeFile(self,filename): 
         f = open(filename, 'w')
         for line in self._postcards:
             f.write(line)
         f.close()
-        #after splitting the list _postcards in three lists clean the lists and then if the key is not present in the ditctionaries _from,_to and _date create a new key if it is already presend append it to the dictionary
     def parsePostcards(self):
+        
             for i in range(0, len(self._postcards)):
                 date, sender, receiver = self._postcards[i].split(" ")
                 # Remove extra characters from strings.
@@ -58,7 +56,7 @@ class PostcardList():
             
     def getNumberOfPostcards(self):
         return len(self._postcards)
-#the same of writeFile but with an already existing file
+
     def updateFile(self,filename):
         f=open(filename, "a") 
         for line in self._postcards:
@@ -70,7 +68,6 @@ class PostcardList():
             self._postcards.append(line)
         f.close()
         self.parsePostcards()
-        
     def getPostcardsByReceiver(self, receiver):#check if the key of two is the same passed then it appends it to  letters and then return it as list
         letters=[]
         if receiver in self._to:

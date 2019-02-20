@@ -1,10 +1,11 @@
 #include <iostream>
 #include <vector>
 #include <tree.h>
+#include <string>
 
 // ! Public insert function
 template <class TK, class TV>
-void Tree<TK,TV>::insert(const TK key, const TV value) {
+void Tree<TK,TV>::insert(const TK& key, const TV& value) {
     if(root!=nullptr) {
         // If the root is not empty insert the pair
         insert(key, value, root);
@@ -15,7 +16,7 @@ void Tree<TK,TV>::insert(const TK key, const TV value) {
     }
 }
 
-// ! Public insert function from pair (might be useful)
+// ! Public insert function from pair
 template <class TK, class TV>
 void Tree<TK,TV>::insert(const std::pair<TK,TV>& p) {
     insert(p.first,p.second);
@@ -23,66 +24,59 @@ void Tree<TK,TV>::insert(const std::pair<TK,TV>& p) {
 
 // ! Private insert function
 template <class TK, class TV>
-void Tree<TK,TV>::insert(const TK key, const TV value, const std::unique_ptr<Node>& node) {
+void Tree<TK,TV>::insert(const TK& key, const TV& value, const std::unique_ptr<Node>& node) {
+    // Check if duplicate
+    if(key != node->data.first){
     // ! Go left if key is smaller
-    if(key <= node -> get_data().first) {
-        // Check nullity of pointer
-        if (node -> left != nullptr) {
-            insert(key, value, node->left);
-        }
-        else {
-            // ! Create a new node
-            node->left.reset(new Node{key, value, nullptr,nullptr,node.get()});
-        }
-    }
-    else if(node->right!=nullptr) {
-        // Subdivide the problem
-        insert(key,value, node->right);
-    }
-    else{
-      // ! Create a new node
-      node->right.reset(new Node{key, value, nullptr,nullptr,node.get()});}
+    if(key < node -> data.first) {
+          // Check nullity of pointer
+          if (node -> left != nullptr) {
+              insert(key, value, node->left);
+          }
+          else {
+              // ! Create a new node
+              node->left.reset(new Node{key, value, nullptr,nullptr,node.get()});
+          }
+      }
+      else if((node->right!=nullptr)) {
+          // Subdivide the problem
+          insert(key,value, node->right);
+      }
+      else{
+          // ! Create a new node
+          node->right.reset(new Node{key, value, nullptr,nullptr,node.get()});
+            }
+  }
+  else{ std::cout << "Key already present, duplicates are not allowed" << std::endl;}
+
 }
 
 // ! Function that allows to modify the value associated with the key with a new value passed as attribute
 template <class TK, class TV>
 void Tree<TK,TV>::modify(const TK& key, const TV& value) {
     // Find the key
-    ConstIterator it = cfind(key);
-    ConstIterator end = this->cend();
-    if((it==end)&&((*it).first != (*end).first))
-        std::cout << "Key not present, impossible to modify" << std::endl;
+    Iterator it = find(key);
+    Iterator end = this->end();
+    if(it==end){
+      // If the tree is empty the find function will let you know
+      if(root!=nullptr)
+        std::cout << "Impossible to modify" << std::endl;}
     else {
-        (!it)->set_value(value);
+        (*it).second = value;
     }
 }
 
 // Function to remove a node given its key
 template <class TK, class TV>
 void Tree<TK,TV>::remove(const TK& key) {
+    // Look for the key
+    Node* node = (!find(key));
 
-    Node* node = root.get();
-    // Loop until found (iteratively)
-    while (node->get_data().first != key) {
-        // Go left
-        if(key<node->get_data().first) {
-            node = node->left.get();
-        }
-        // or go right
-        else if(key>node->get_data().first) {
-            node = node->right.get();
-        }
-        else{
-            // In case the key is not found
-            break;}
-    }
-    // If found
-
-    if(node->get_data().first == key) {
+    if(node!=nullptr) {
         std::unique_ptr<Node> left_branch{(node)->left.release()};
         std::unique_ptr<Node> right_branch{(node)->right.release()};
         if(node != root.get()) {
-            if((node->parent->left!= nullptr)&&(node->parent->left->get_data().first == key)) {
+            if((node->parent->left!= nullptr)&&(node->parent->left->data.first == key)) {
                 // Remove the node
                 node->parent->left.reset();
             }
@@ -99,10 +93,11 @@ void Tree<TK,TV>::remove(const TK& key) {
         copy_tree(left_branch);
         copy_tree(right_branch);
     }
-    else {
-        std::cout << "Key not found, impossibile to eliminate" << std::endl;
+    else{
+      // If the tree is empty the find function will let you know
+        if(root!=nullptr)
+          std::cout << "Impossibile to eliminate" << std::endl;
     }
-
 }
 
 // ! Private copy function
@@ -110,7 +105,7 @@ template <class TK, class TV>
 void Tree<TK,TV>::copy_tree(const std::unique_ptr<Node> &node) {
     if(node != nullptr)
     {
-        insert(node->get_data().first,node->get_data().second);
+        insert(node->data.first,node->data.second);
         copy_tree(node->left);
         copy_tree(node->right);
     }
@@ -118,24 +113,24 @@ void Tree<TK,TV>::copy_tree(const std::unique_ptr<Node> &node) {
 
 // ! Public function to check if the tree is balanced
 template <class TK, class TV>
-bool Tree<TK,TV>::is_balanced() const{
+bool Tree<TK,TV>::is_balanced() const noexcept{
   if(root!=nullptr)
     return (is_balanced(root)>-1);
   else{
-    std::cout << "The tree is empty! Hence balanced" << std::endl;
+    std::cout << "The tree is empty!" << std::endl;
     return true;
     }
-  }
+}
 
 // ! Recursive function to check if each subtree specified by the node is balanced
 template <class TK, class TV>
-int Tree<TK,TV>::is_balanced(const std::unique_ptr<Node> & node) const{
+int Tree<TK,TV>::is_balanced(const std::unique_ptr<Node> & node) const noexcept{
  /*
   if the tree is balanced, return the height of the tree
   if the tree is not balanced, return -1
+  if the left and right subtrees are balaced check that the difference in height is at most 1
 */
-
-  // Do not consider (return 0) if the algorithm arrived to a leaf
+  // Return 0 (height) if the algorithm arrived to a leaf
   if (node == nullptr)
       return 0;
 
@@ -159,20 +154,21 @@ int Tree<TK,TV>::is_balanced(const std::unique_ptr<Node> & node) const{
 // ! Public balance function
 template <class TK, class TV>
 void Tree<TK,TV>::balance() {
-
     // Need iterator to first and end nodes
-    ConstIterator it = this->cbegin();
-    ConstIterator stop = this ->cend();
+    ConstIterator itc = this->cbegin();
+    ConstIterator stopc = this ->cend();
     std::vector<std::pair<TK,TV>> data;
     // ! Collect all the data in a sorted fashion
-    data.push_back(*it);
-    do {
-        ++it;
-        data.push_back(*it);
-    } while(it!=stop);
-    // Build the tree based on the data just collected
-    clear(root);
-    build_tree(data, root) ;
+    for(;itc!=stopc;++itc)
+      data.push_back(std::move(*itc));
+    if(root!=nullptr){
+      clear(root);
+      // Build the tree based on the data just collected
+      build_tree(data, root) ;
+    }
+    else{
+      std::cout << "The tree is empty, impossible to balance" << std::endl;
+    }
 }
 
 // ! Function to build a tree given a vector of data and a starting node
@@ -195,7 +191,7 @@ void Tree<TK,TV>::build_tree(const std::vector<std::pair<TK,TV>>& vector, std::u
     unsigned int midleft = std::distance(left.begin(), left.begin() + left.size() / 2);
     unsigned int midright = std::distance(right.begin(), right.begin() + right.size() / 2);
 
-    // Much code duplication, there's probably a better implementation
+    // Code duplication, maybe there's a better implementation
     // Case in which the vector is non-empty
     if(left.size() > 1)
     {
@@ -203,7 +199,7 @@ void Tree<TK,TV>::build_tree(const std::vector<std::pair<TK,TV>>& vector, std::u
         build_tree(left, node->left);
     }
     // Case in which the vector has one element
-    else if(left.size() > 0) {
+    else if(left.size() == 1) {
         node -> left.reset(new Node{left.at(midleft).first, left.at(midleft).second, nullptr,nullptr,node.get()});
     }
     // Case in which the vector is non-empty
@@ -213,10 +209,11 @@ void Tree<TK,TV>::build_tree(const std::vector<std::pair<TK,TV>>& vector, std::u
         build_tree(right, node->right);
     }
     // Case in which the vector has one element
-    else if(right.size() > 0) {
+    else if(right.size() ==1) {
         node -> right.reset(new Node{right.at(midright).first, right.at(midright).second, nullptr,nullptr,node.get()});
     }
 }
+
 // ! Function to clear a tree
 template <class TK, class TV>
 void Tree<TK,TV>::clear() {
@@ -229,7 +226,6 @@ void Tree<TK,TV>::clear() {
 // ! Private recursive clear function
 template <class TK, class TV>
 void Tree<TK,TV>::clear(std::unique_ptr<Node>& node) {
-
     if(node->left!=nullptr)
         clear(node->left);
     if(node->right!=nullptr)
@@ -237,7 +233,7 @@ void Tree<TK,TV>::clear(std::unique_ptr<Node>& node) {
     // When the algorithm got to the leaf
     if((node->left==nullptr)&&(node->right==nullptr)) {
         #ifdef debug
-        std::cout << "Being eliminated: " << node->get_data().first << '\n';
+        std::cout << "Being eliminated: " << node->data.first << '\n';
         #endif
         node.reset();
     }
@@ -245,7 +241,7 @@ void Tree<TK,TV>::clear(std::unique_ptr<Node>& node) {
 
 // ! is_empty function
 template <class TK, class TV>
-bool Tree<TK,TV>::is_empty() const {
+bool Tree<TK,TV>::is_empty() const noexcept {
     if(root!=nullptr)
         return false;
     else
@@ -256,10 +252,11 @@ bool Tree<TK,TV>::is_empty() const {
 template <class TK, class TV>
 class Tree<TK,TV>::Iterator Tree<TK,TV>::find(const TK& key){
     if(root == nullptr) {
+        std::cout << "The tree is empty" << std::endl;
         return Iterator{nullptr};
     }
     else {
-        if(key == root->get_data().first)
+        if(key == root->data.first)
             return Iterator{root.get()};
         else {
             return this->find(key, root);
@@ -269,22 +266,21 @@ class Tree<TK,TV>::Iterator Tree<TK,TV>::find(const TK& key){
 
 template <class TK, class TV>
 class Tree<TK,TV>::Iterator Tree<TK,TV>::find(const TK& key, const std::unique_ptr<Node>& node){
+    // Assume key is not found
     static Iterator toReturn = Iterator{(*this).end()};
     // If the value is found, return an iterator to the node
-    if(key == node->get_data().first) {
-        //return Iterator{node.get()};
+    if(key == node->data.first) {
         toReturn = Iterator{node.get()};
     }
     // Look for the node
     else
-     if(key < node-> get_data().first) {
+     if(key < node-> data.first) {
         if (node->left != nullptr)
             // Going left
             find(key, node->left);
         else {
             std::cout << "Key not found, returning end()\n";
-            //return Iterator{(*this).cend()};
-            toReturn = Iterator{(*this).end()};
+            toReturn = Iterator{nullptr};
         }
     } else {
         if (node->right != nullptr)
@@ -292,8 +288,7 @@ class Tree<TK,TV>::Iterator Tree<TK,TV>::find(const TK& key, const std::unique_p
             find(key, node->right);
         else {
             std::cout << "Key not found, returning end()\n";
-            //return Iterator{(*this).cend()};
-            toReturn = Iterator{(*this).end()};
+            toReturn = Iterator{nullptr};
         }
     }
   return toReturn;
@@ -306,7 +301,7 @@ class Tree<TK,TV>::ConstIterator Tree<TK,TV>::cfind(const TK& key) const {
         return ConstIterator{nullptr};
     }
     else {
-        if(key == root->get_data().first)
+        if(key == root->data.first)
             return ConstIterator{root.get()};
         else {
             return cfind(key, root);
@@ -319,11 +314,11 @@ template <class TK, class TV>
 class Tree<TK,TV>::ConstIterator Tree<TK,TV>::cfind(const TK& key, const std::unique_ptr<Node>& node) const {
     static ConstIterator toReturn = ConstIterator{(*this).cend()};
     // If the value is found, return an iterator to the node
-    if(key == node->get_data().first) {
+    if(key == node->data.first) {
         toReturn = ConstIterator{node.get()};
     }
     // Look for the node
-    else if(key < node-> get_data().first) {
+    else if(key < node-> data.first) {
         if (node->left != nullptr)
             // Going left
             cfind(key, node->left);
@@ -349,7 +344,6 @@ class Tree<TK,TV>::Node* Tree<TK,TV>::go(const method m) const {
 
     Node* p;
     p = root.get();
-
     // Do according to case
     switch (m) {
     case method::left:
@@ -365,35 +359,30 @@ class Tree<TK,TV>::Node* Tree<TK,TV>::go(const method m) const {
     default:
         throw std::runtime_error{"unknown method\n"};
     };
-
-    // Return pointer to node
     return p;
 }
 
 template <class TK, class TV>
 TV& Tree<TK,TV>::operator[](const TK& k) {
-  Iterator itc = this->find(k);
-  Iterator endc = end();
-  if((itc==endc)&&((!itc)->get_data().first != k)){
+  Iterator it = this->find(k);
+  Iterator end = this->end();
+  if(it==end){
     insert(k,0);
-    itc = this->find(k);
+    it = this->find(k);
   }
-  return (!itc)->get_data().second;
-
+  return (*it).second;
 }
-//TOBEASKEED!
-/*
+
 template <class TK, class TV>
-const TV& Tree<TK,TV>::operator[](const TK& k){
+const TV& Tree<TK,TV>::operator[](const TK& k) const{
   ConstIterator itc = this->cfind(k);
   ConstIterator endc = cend();
-  if((itc==endc)&&((!itc)->get_data().first != k)){
-    insert(k,0);
-    itc = this->cfind(k);
+  if(itc==endc){
+    throw std::runtime_error{"Key not found, impossible to modify a const tree (aborting)"};
   }
-  return (!itc)->get_data().second;
+  return (*itc).second;
 }
-*/
+
 
 // Explicit templates
 template class Tree<int,int>;
